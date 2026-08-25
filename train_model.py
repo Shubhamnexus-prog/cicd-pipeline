@@ -35,7 +35,7 @@ X_test = test_data.drop('target', axis=1).values.astype('float32')
 y_test = test_data.loc[:, 'target'].values.astype('int32')
 
 # Logistic Regression
-logreg = LogisticRegression(C=0.0001, solver='lbfgs', max_iter=100, multi_class='multinomial')
+logreg = LogisticRegression(C=0.0001, solver='lbfgs', max_iter=100')
 logreg.fit(X_train, y_train)
 predictions_lr = logreg.predict(X_test)
 
