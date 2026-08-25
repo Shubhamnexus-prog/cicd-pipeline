@@ -1,32 +1,173 @@
 name: Model Training CICD
-permissions:
-  id-token: write
-  contents: write 
-  
+
 on:
-  - push
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
+
   run:
-    runs-on: 
-      - ubuntu-latest
-    
+
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: iterative/setup-cml@v1
-      - uses: actions/checkout@v3
-      - name: Train model
-        env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # =====================================
+      # Checkout Code
+      # =====================================
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+
+      # =====================================
+      # Setup Python
+      # =====================================
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+
+      # =====================================
+      # Setup CML
+      # =====================================
+
+      - name: Setup CML
+        uses: iterative/setup-cml@v2
+        with:
+          vega: false
+
+
+      # =====================================
+      # Install Python Dependencies
+      # =====================================
+
+      - name: Install Dependencies
         run: |
+
+          python -m pip install --upgrade pip
+
           pip install -r requirements.txt
+
+
+      # =====================================
+      # Train Model
+      # =====================================
+
+      - name: Train Model
+        run: |
+
           python train_model.py
 
-          echo "RF and LR Model Score" >report.md
-          cat scores.txt >> report.md
-          
-          echo "Confusion Matrix & Feature Importance">report1.md
-          echo '|[](./ConfusionMatrix.png "ConfusionMatrix")' >> report1.md
-          echo '|[](./FeatureImportance.png "FeatureImportance")' >> report1.md
-     
-          cat report.md report1.md >> combined_file.md
-          cml comment create combined_file.md
+
+      # =====================================
+      # Display Scores
+      # =====================================
+
+      - name: Display Model Scores
+        run: |
+
+          echo "===================================="
+          echo "MODEL SCORES"
+          echo "===================================="
+
+          cat outputs/scores.txt
+
+
+      # =====================================
+      # Create CML Report
+      # =====================================
+
+      - name: Create CML Report
+        run: |
+
+          echo "# 🤖 Iris Classification Model Report" > report.md
+
+          echo "" >> report.md
+
+          echo "## 📊 Model Scores" >> report.md
+
+          echo "" >> report.md
+
+          cat outputs/scores.txt >> report.md
+
+          echo "" >> report.md
+
+          echo "## Confusion Matrix - Logistic Regression" >> report.md
+
+          echo "" >> report.md
+
+          echo "![](./outputs/ConfusionMatrix_LogisticRegression.png)" >> report.md
+
+          echo "" >> report.md
+
+          echo "## Confusion Matrix - Random Forest" >> report.md
+
+          echo "" >> report.md
+
+          echo "![](./outputs/ConfusionMatrix_RandomForest.png)" >> report.md
+
+          echo "" >> report.md
+
+          echo "## Feature Importance" >> report.md
+
+          echo "" >> report.md
+
+          echo "![](./outputs/FeatureImportance.png)" >> report.md
+
+          echo "" >> report.md
+
+          echo "## Model Comparison" >> report.md
+
+          echo "" >> report.md
+
+          echo "![](./outputs/ModelComparison.png)" >> report.md
+
+
+      # =====================================
+      # Publish CML Report
+      # =====================================
+
+      - name: Publish CML Report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        run: |
+
+          cml comment create report.md
+
+
+      # =====================================
+      # Upload Artifacts
+      # =====================================
+
+      - name: Upload Model Reports
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: iris-model-report
+
+          path: |
+
+            outputs/scores.txt
+
+            outputs/ConfusionMatrix_LogisticRegression.png
+
+            outputs/ConfusionMatrix_RandomForest.png
+
+            outputs/FeatureImportance.png
+
+            outputs/ModelComparison.png
