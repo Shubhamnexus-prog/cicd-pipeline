@@ -1,4 +1,4 @@
-name: Model Training CICD
+name: Model Training CI/CD
 
 on:
   push:
@@ -9,50 +9,44 @@ on:
     branches:
       - main
 
+
 permissions:
   contents: read
   pull-requests: write
 
+
 jobs:
 
-  run:
+  train-model:
+
+    name: Train Iris Classification Model
 
     runs-on: ubuntu-latest
 
     steps:
 
-      # =====================================
-      # Checkout Code
-      # =====================================
+      # ==========================================
+      # Checkout Repository
+      # ==========================================
 
       - name: Checkout Repository
         uses: actions/checkout@v4
 
 
-      # =====================================
-      # Setup Python
-      # =====================================
+      # ==========================================
+      # Setup Python 3.12
+      # ==========================================
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
+          cache: "pip"
 
 
-      # =====================================
-      # Setup CML
-      # =====================================
-
-      - name: Setup CML
-        uses: iterative/setup-cml@v2
-        with:
-          vega: false
-
-
-      # =====================================
-      # Install Python Dependencies
-      # =====================================
+      # ==========================================
+      # Install Dependencies
+      # ==========================================
 
       - name: Install Dependencies
         run: |
@@ -62,9 +56,9 @@ jobs:
           pip install -r requirements.txt
 
 
-      # =====================================
+      # ==========================================
       # Train Model
-      # =====================================
+      # ==========================================
 
       - name: Train Model
         run: |
@@ -72,86 +66,30 @@ jobs:
           python train_model.py
 
 
-      # =====================================
-      # Display Scores
-      # =====================================
+      # ==========================================
+      # Verify Model Outputs
+      # ==========================================
 
-      - name: Display Model Scores
+      - name: Verify Generated Files
         run: |
 
-          echo "===================================="
-          echo "MODEL SCORES"
-          echo "===================================="
+          echo "======================================"
+          echo "Generated Model Files"
+          echo "======================================"
+
+          ls -lh outputs/
+
+          echo ""
+          echo "======================================"
+          echo "Model Scores"
+          echo "======================================"
 
           cat outputs/scores.txt
 
 
-      # =====================================
-      # Create CML Report
-      # =====================================
-
-      - name: Create CML Report
-        run: |
-
-          echo "# 🤖 Iris Classification Model Report" > report.md
-
-          echo "" >> report.md
-
-          echo "## 📊 Model Scores" >> report.md
-
-          echo "" >> report.md
-
-          cat outputs/scores.txt >> report.md
-
-          echo "" >> report.md
-
-          echo "## Confusion Matrix - Logistic Regression" >> report.md
-
-          echo "" >> report.md
-
-          echo "![](./outputs/ConfusionMatrix_LogisticRegression.png)" >> report.md
-
-          echo "" >> report.md
-
-          echo "## Confusion Matrix - Random Forest" >> report.md
-
-          echo "" >> report.md
-
-          echo "![](./outputs/ConfusionMatrix_RandomForest.png)" >> report.md
-
-          echo "" >> report.md
-
-          echo "## Feature Importance" >> report.md
-
-          echo "" >> report.md
-
-          echo "![](./outputs/FeatureImportance.png)" >> report.md
-
-          echo "" >> report.md
-
-          echo "## Model Comparison" >> report.md
-
-          echo "" >> report.md
-
-          echo "![](./outputs/ModelComparison.png)" >> report.md
-
-
-      # =====================================
-      # Publish CML Report
-      # =====================================
-
-      - name: Publish CML Report
-        env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        run: |
-
-          cml comment create report.md
-
-
-      # =====================================
-      # Upload Artifacts
-      # =====================================
+      # ==========================================
+      # Upload Model Reports
+      # ==========================================
 
       - name: Upload Model Reports
         uses: actions/upload-artifact@v4
@@ -161,13 +99,8 @@ jobs:
           name: iris-model-report
 
           path: |
-
             outputs/scores.txt
-
             outputs/ConfusionMatrix_LogisticRegression.png
-
             outputs/ConfusionMatrix_RandomForest.png
-
             outputs/FeatureImportance.png
-
             outputs/ModelComparison.png
