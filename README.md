@@ -3,7 +3,6 @@
 Machine Learning CI/CD pipeline using GitHub Actions.
 
 ## Models
-
 - Logistic Regression
 - Random Forest Classifier
 
@@ -24,7 +23,6 @@ Additional features:
 - Feature Importance
 
 ## CI/CD
-
 GitHub Actions automatically:
 
 1. Checkout repository
