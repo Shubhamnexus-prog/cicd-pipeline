@@ -14,7 +14,6 @@ Additional features:
 - Petal Length / Petal Width
 
 ## Evaluation Metrics
-
 - Accuracy
 - Precision
 - Recall
